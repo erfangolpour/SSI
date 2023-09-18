@@ -1,15 +1,9 @@
 .phony all:
-all: ssi inf args
+all: ssi
 
-sample: ssi.c
-	gcc ssi.c -lreadline -lhistory -ltermcap -o sample
+ssi: ssi.c backgroundproc.c
+	gcc ssi.c backgroundproc.c -lreadline -lhistory -ltermcap -o ssi
 
-inf: inf.c
-	gcc inf.c -o inf
-
-args: args.c
-	gcc args.c -o args
-
-.PHONY clean:
+.phony clean:
 clean:
 	-rm -rf *.o *.exe
