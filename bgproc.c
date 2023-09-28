@@ -11,8 +11,7 @@ struct BackgroundProcess {
     char command[MAX_LINE];
     bool paused;
     struct BackgroundProcess *next;
-};
-struct BackgroundProcess *bg_processes = NULL;
+} *bg_processes = NULL;
 
 void add_background_process(pid_t pid, const char *command) {
     struct BackgroundProcess *process = (struct BackgroundProcess *)malloc(sizeof(struct BackgroundProcess));
@@ -62,34 +61,36 @@ void remove_background_process(pid_t pid) {
 }
 
 void bglist() {
-    printf("Background processes:\n");
     struct BackgroundProcess *current = bg_processes;
     if (current == NULL) {
         printf("No background processes\n");
         return;
     }
+    int count = 0;
     while (current != NULL) {
-        printf("PID: %d\tCommand: %s\t%s\n", current->pid, current->command, current->paused ? "(Paused)" : "");
+        printf("%d:\t%s\t%s\n", current->pid, current->command, current->paused ? "(Paused)" : "");
         current = current->next;
+        count++;
     }
+    printf("Total background jobs: %d\n", count);
 }
 
-void check_background_processes() {
-    int status;
-    pid_t pid;
-
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        // Find and remove the terminated background process from the list
-        remove_background_process(pid);
-
-        if (WIFEXITED(status)) {
-            printf("\nBackground process with PID %d exited with status %d\n", pid, WEXITSTATUS(status));
+bool does_process_exist(pid_t pid) {
+    // Check if the process exists and is a child of the shell
+    struct BackgroundProcess *current = bg_processes;
+    while (current != NULL) {
+        if (current->pid == pid) {
+            return true;
         }
+        current = current->next;
     }
+    return false;
 }
 
 void pause_background_process(pid_t pid) {
-    if (kill(pid, SIGSTOP) == -1) {
+    if (!does_process_exist(pid)) {
+        printf("Background process with PID %d does not exist or is not a child of this shell\n", pid);
+    } else if (kill(pid, SIGSTOP) == -1) {
         perror("Failed to pause background process");
     } else {
         printf("Background process with PID %d paused\n", pid);
@@ -106,7 +107,9 @@ void pause_background_process(pid_t pid) {
 }
 
 void resume_background_process(pid_t pid) {
-    if (kill(pid, SIGCONT) == -1) {
+    if (!does_process_exist(pid)) {
+        printf("Background process with PID %d does not exist or is not a child of this shell\n", pid);
+    } else if (kill(pid, SIGCONT) == -1) {
         perror("Failed to resume background process");
     } else {
         printf("Background process with PID %d resumed\n", pid);
@@ -123,8 +126,14 @@ void resume_background_process(pid_t pid) {
 }
 
 void kill_background_process(pid_t pid) {
-    if (kill(pid, SIGTERM) == -1) {
-        perror("Failed to kill background process");
+    if (!does_process_exist(pid)) {
+        printf("Background process with PID %d does not exist or is not a child of this shell\n", pid);
+    } else if (kill(pid, SIGTERM) == -1) {
+        perror("Failed to gracefully terminate background process");
+        printf("Attempting to force kill background process with PID %d\n", pid);
+        if (kill(pid, SIGKILL) == -1) {
+            perror("Failed to kill background process");
+        }
     } else {
         printf("Background process with PID %d killed\n", pid);
         // Find and remove the terminated background process from the list
@@ -133,12 +142,18 @@ void kill_background_process(pid_t pid) {
 }
 
 void free_background_processes() {
-    // Free the background process linked list
+    // Free the background processes linked list
     struct BackgroundProcess *current = bg_processes;
     while (current != NULL) {
         struct BackgroundProcess *temp = current;
         current = current->next;
-        kill(temp->pid, SIGTERM);
+        if (kill(temp->pid, SIGTERM) == -1) {
+            perror("Failed to gracefully terminate background process");
+            printf("Attempting to force kill background process with PID %d\n", temp->pid);
+            if (kill(temp->pid, SIGKILL) == -1) {
+                perror("Failed to kill background process");
+            }
+        }
         free(temp);
     }
 }
