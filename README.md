@@ -1,26 +1,119 @@
-Title: Assignment 1 - SSI (Simple Shell Interpreter)
+# Simple Shell Interpreter (SSI)
 
-Description: A simple shell interpreter written in C
+The Simple Shell Interpreter (SSI) is a basic command-line interface that simulates a Unix shell. It provides a prompt, accepts user commands, and executes them. Additionally, it supports background processes, allowing users to run multiple commands concurrently.
 
-Author: Erfan Golpour #V00991341
+## Features
 
-Course: CSC 360
+- Interactive command prompt
+- Support for built-in commands:
+  - `cd` (change directory)
+  - `exit` (exit the shell)
+  - `bg` (run a command in the background)
+  - `bglist` (list all background processes)
+  - `bgpause` (pause a background process by PID)
+  - `bgresume` (resume a paused background process by PID)
+  - `bgkill` (kill a background process by PID)
+  - `history` (display command history)
+- Signal handling for Ctrl+C (SIGINT) and child processes (SIGCHLD)
+- Colored prompt with username, hostname, and current working directory
+- Command history and line editing using the GNU Readline library
 
-Date: 2023-09-29
+## Building and Running
 
-How to compile and run the program:
+To build and run the Simple Shell Interpreter, follow these steps:
 
-- Compile the program using `make`
-- Run the program using `./ssi`
-- Use 'exit' to exit the program
+1. Ensure that you have the required dependencies installed: `gcc`, `make`, and the `readline` library.
 
-Extra Features (previously discussed with the instructor):
+2. Clone the repository or download the source code.
 
-- Command history: use the `history` command to see a list of commands issued in the current session.
-- Auto Completion: thanks to the `readline` library, the user can use the `tab` key to auto complete commands and paths.
-- Handling quotations: this implementation handles single and double quotations within input commands. For instance, a command like `git commit -m "Extra Features"`` is tokenized as ["git", "commit", "-m", "Extra Features"], rather than ["git", "commit", "-m", ""Extra", "Features""].
-- Instant announcements: termination of background processes is immediately announced to the user using the "signal" library.
-- Input/Output redirection: the input and output of background processes are redirected to /dev/null in order to avoid cluttering/blocking the terminal.
-- More control over background processes: use `bgpause`, `bgresume`, and `bgkill` to pause/resume/kill background processes respectively.
-- Handling of `SIGINT` (ctrl-c): the shell ignores the `SIGINT` signal, and passes them to the foreground process when it is running.
-- Colored prompt!
+3. Open a terminal and navigate to the project directory.
+
+4. Build the project using the provided `Makefile`:
+
+   ```
+   make
+   ```
+
+   This will compile the source files and create an executable named `ssi`.
+
+5. Run the Simple Shell Interpreter:
+
+   ```
+   ./ssi
+   ```
+
+   You should see the shell prompt, and you can start entering commands.
+
+## Usage
+
+Once the shell is running, you can enter commands at the prompt. Here are some examples:
+
+- Execute a command:
+
+  ```
+  ls -l
+  ```
+
+- Change directory:
+
+  ```
+  cd path/to/directory
+  ```
+
+- Run a command in the background:
+
+  ```
+  bg command arg1 arg2
+  ```
+
+- List all background processes:
+
+  ```
+  bglist
+  ```
+
+- Pause a background process by PID:
+
+  ```
+  bgpause 1234
+  ```
+
+- Resume a paused background process by PID:
+
+  ```
+  bgresume 1234
+  ```
+
+- Kill a background process by PID:
+
+  ```
+  bgkill 1234
+  ```
+
+- View command history:
+
+  ```
+  history
+  ```
+
+- Exit the shell:
+
+  ```
+  exit
+  ```
+
+## Code Structure
+
+The project consists of three main source files:
+
+1. `ssi.c`: Contains the main loop and signal handling for the shell.
+2. `bgproc.c`: Implements the background process management functionality.
+3. `tokenizer.c`: Provides functions for tokenizing user input.
+
+## Contributing
+
+Contributions to the Simple Shell Interpreter project are welcome! If you find any bugs, have suggestions for improvements, or would like to add new features, please open an issue or submit a pull request on the project's GitHub repository.
+
+## License
+
+This project is licensed under the [GPLv3](LICENSE). Feel free to use, modify, and distribute the code as per the terms of the license.
